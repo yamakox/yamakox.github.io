@@ -128,9 +128,8 @@
           return documents;
         });
       };
-      const handleDrop = (e) => {
-        e.preventDefault();
-        convertXsl(Array.from(e.dataTransfer.files)).then((docs) => {
+      const renderHtml = (files) => {
+        convertXsl(Array.from(files)).then((docs) => {
           const body = document.body;
           body.innerHTML = "";
           const nodes = docs.map(([name, doc]) => {
@@ -146,6 +145,13 @@
           });
           body.append(...nodes);
         });
+      };
+      const handleDrop = (e) => {
+        e.preventDefault();
+        renderHtml(e.dataTransfer.files);
+      };
+      const handleFileInput = (e) => {
+        renderHtml(e.target.files);
       };
     </script>
   </head>
@@ -164,10 +170,23 @@
           font-size: 2em;
           border: 2px dashed black;
           border-radius: 16px;
+          text-align: center;
+          line-height: 2em;
+          cursor: pointer;
         "
+        onclick="document.getElementById('file').click()"
       >
-        Drop files or zip-file here
+        Drop files or zip-file here<br />
+        Tap to choose files or zip-file
       </span>
+      <input 
+        type="file" 
+        id="file" 
+        multiple 
+        accept="application/zip, application/x-zip-compressed, text/xml, text/xsl" 
+        style="display: none;"
+        onchange="handleFileInput(event)"
+      />
     </div>
   </body>
 </html>
