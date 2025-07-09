@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>MP4 to GIF Converter</title>
+  <script src="./gif.js.optimized/dist/gif.js"></script>
+  <style>
+    body { font-family: sans-serif; text-align: center; padding: 2em; }
+    canvas { display: none; }
+    video { display: none; }
+
+    #drop-area {
+      margin: 0 0 1em 0;
+      padding: 2em;
+      width: calc(100% - 4em);
+      border: 1px solid black;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+    #drop-area.dragover {
+      background-color: #ff000020;
+    }
+    #gifview { display: none; }
+    #download { margin-top: 1em; display: none; }
+  </style>
+</head>
+<body>
+<h2>MP4をGIFに変換</h2>
+<div id="drop-area" ondrop="dropHandler(event);" ondragover="dragOverHandler(event);" ondragleave="dragLeaveHandler(event);">
+  <div id="status">動画をドラッグ&amp;ドロップするか、ファイル選択してください。</div><br>
+  <input type="file" id="fileInput" accept="video/mp4">
+</div>
+<video id="video" muted playsinline></video>
+<canvas id="canvas" width="320" height="240"></canvas>
+<img id="gifview" /><br>
+<a id="download" download="output.gif">GIFをダウンロード</a>
+
+<script>
+const dropArea = document.getElementById('drop-area');
+const fileInput = document.getElementById('fileInput');
+const video = document.getElementById('video');
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const status = document.getElementById('status');
+const downloadLink = document.getElementById('download');
+const gifView = document.getElementById('gifview');
+
+let gif;
+
+function dropHandler(ev) {
+  // 既定の動作で防ぐ（ファイルが開かれないようにする）
+  ev.preventDefault();
+  dropArea.classList.remove('dragover');
+
+  if (ev.dataTransfer.items) {
+    // DataTransferItemList インターフェイスを使用して、ファイルにアクセスする
+    for(const item of ev.dataTransfer.items) {
+      if (item.kind === "file" && item.type == 'video/mp4') {
+        const file = item.getAsFile();
+        setupFile(file);
+        break;
+      }
+    }
+  } else {
+    // DataTransfer インターフェイスを使用してファイルにアクセスする
+    for(const file of ev.dataTransfer.files) {
+      if (file.type == 'video/mp4') {
+        setupFile(file);
+        break;
+      }
+    }
+  }
+}
+
+function dragOverHandler(ev) {
+  // 既定の動作で防ぐ（ファイルが開かれないようにする）
+  ev.preventDefault();
+  if (ev.dataTransfer.items) {
+    // DataTransferItemList インターフェイスを使用して、ファイルにアクセスする
+    for(const item of ev.dataTransfer.items) {
+      if (item.kind === "file" && item.type == 'video/mp4') {
+        dropArea.classList.add('dragover');
+        break;
+      }
+    }
+  } else {
+    // DataTransfer インターフェイスを使用してファイルにアクセスする
+    for(const file of ev.dataTransfer.files) {
+      if (file.type == 'video/mp4') {
+        dropArea.classList.add('dragover');
+        break;
+      }
+    }
+  }
+}
+
+function dragLeaveHandler(ev) {
+  dropArea.classList.remove('dragover');
+}
+
+fileInput.addEventListener('change', async () => {
+  const file = fileInput.files[0];
+  if (file) {
+    setupFile(file);
+  }
+});
+
+function setupFile(file) {
+  status.textContent = '動画を読み込み中...';
+
+  const url = URL.createObjectURL(file);
+  video.src = url;
+
+  // 再生準備ができたら処理開始
+  video.onloadedmetadata = () => {
+    downloadLink.style.display = 'none';
+    downloadLink.href = '';
+    gifView.style.display = 'none';
+    gifView.src = '';
+    canvas.width = video.videoWidth / 2;   // 例: サイズを半分に縮小
+    canvas.height = video.videoHeight / 2;
+    startCapture();
+  };
+}
+
+function startCapture() {
+  gif = new GIF({
+    workers: 2,
+    quality: 10,
+    width: canvas.width,
+    height: canvas.height,
+    workerScript: './gif.js.optimized/dist/gif.worker.js'
+  });
+
+  status.textContent = '動画を処理中...';
+
+  let frameCount = 0;
+  const maxFrames = 50;  // 最大50フレーム（必要なら調整）
+
+  video.currentTime = 0;
+  video.play();
+
+  const captureInterval = 100; // msごとにキャプチャ（10fps）
+
+  const intervalId = setInterval(() => {
+    if (video.ended || frameCount >= maxFrames) {
+      clearInterval(intervalId);
+      video.pause();
+      status.textContent = 'GIFを生成中...';
+      gif.render();
+      return;
+    }
+
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    gif.addFrame(ctx, { copy: true, delay: captureInterval });
+    frameCount++;
+  }, captureInterval);
+
+  gif.on('finished', (blob) => {
+    const gifUrl = URL.createObjectURL(blob);
+    downloadLink.href = gifUrl;
+    downloadLink.style.display = 'inline-block';
+    gifView.src = gifUrl;
+    gifView.style.display = 'inline-block';
+    status.textContent = 'GIFが完成しました。';
+  });
+
+  gif.on('progress', (p) => {
+    status.textContent = `GIF生成中... ${(p * 100).toFixed(1)}%`;
+  });
+}
+</script>
+
+</body>
+</html>
