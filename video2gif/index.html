@@ -16,6 +16,9 @@
       margin: 0;
       padding: 0;
     }
+    span {
+      font-size: small;
+    }
     canvas { display: none; }
     video { display: none; }
     .main {
@@ -28,9 +31,22 @@
       justify-content: stretch;
       align-items: stretch;
     }
+    .header {
+      margin: 0;
+      padding: 0;
+      width: 100vw;
+      display: flex;
+      flex-direction: column;
+      justify-content: start;
+      align-items: center;
+    }
+    .header h2 {
+      margin: 1em 0 .5em 0;
+    }
 
     #drop-area {
       margin: 1em;
+      padding: 1em 0;
       height: 100%;
       border: 1.5px solid black;
       border-radius: 1em;
@@ -59,19 +75,18 @@
         padding: .2em .25em;
       }
     }
-    #status {
-      margin: 1em;
-    }
     #gifview { display: none; max-width: 90%;}
     #download { margin-top: 1em; display: none; }
   </style>
 </head>
 <body>
 <div class="main">
-  <div id="drop-area" ondrop="dropHandler(event);" ondragover="dragOverHandler(event);" ondragenter="dragEnterHandler(event);" ondragleave="dragLeaveHandler(event);">
+  <div class="header">
     <h2>MP4をGIFに変換</h2>
+    <span>サーバを使わずにWebブラウザのJavaScriptで<br>動画ファイル(*.mp4)からアニメーションGIF(<a href="https://github.com/jnordberg/gif.js">gif.js</a>)を生成します。</span>
+  </div>
+  <div id="drop-area" ondrop="dropHandler(event);" ondragover="dragOverHandler(event);" ondragenter="dragEnterHandler(event);" ondragleave="dragLeaveHandler(event);">
     <div id="form-area">
-      <input type="file" id="fileInput" accept="video/mp4">
       <span>
         <label for="width-select">GIF画像の幅(高さは自動計算):</label>
         <select id="width-select">
@@ -102,8 +117,9 @@
           <option value="1">1fps</option>
         </select>
       </span>
+      <input type="file" id="fileInput" accept="video/mp4">
     </div>
-    <div id="status">動画をドラッグ&amp;ドロップするか、ファイル選択してください。</div><br>
+    <div id="status">動画をドラッグ&amp;ドロップするか、ファイルを選択してください。</div><br>
     <video id="video" muted playsinline></video>
     <canvas id="canvas" width="320" height="240"></canvas>
     <img id="gifview" /><br>
