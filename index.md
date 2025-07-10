@@ -1,7 +1,7 @@
 # Welcome to yamakox.github.io
 
 - [TrainScanner関連](./trainscanner.md)
-- [video2gif - 動画ファイルからアニメーションGIFに変換するWebページ](./video2gif.html)
+- [video2gif - 動画ファイルからアニメーションGIFに変換するWebページ](./video2gif/index.html)
 
 ## GitHubで公開しているソフト
 

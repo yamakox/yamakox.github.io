@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MP4 to GIF Converter</title>
+  <script src="./gif.js.optimized/dist/gif.js"></script>
+  <style>
+    html {
+      margin: 0;
+      padding: 0;
+      min-width: 100%;
+      min-height: 100%;
+    }
+    body {
+      margin: 0;
+      padding: 0;
+    }
+    canvas { display: none; }
+    video { display: none; }
+    .main {
+      margin: 0;
+      padding: 0;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: stretch;
+      align-items: stretch;
+    }
+
+    #drop-area {
+      margin: 1em;
+      height: 100%;
+      border: 1.5px solid black;
+      border-radius: 1em;
+      display: flex;
+      flex-direction: column;
+      justify-content: start;
+      align-items: center;
+    }
+    #drop-area.dragover {
+      background-color: #ff000020;
+    }
+    #form-area {
+      margin: 1em;
+      display: flex;
+      flex-direction: column;
+      justify-content: start;
+      align-items: end;
+      gap: 1em 0;
+      label {
+        margin: 0 .5em 0 0;
+        font-size: small;
+      }
+      select {
+        min-width: 6em;
+        text-align: right;
+        padding: .2em .25em;
+      }
+    }
+    #status {
+      margin: 1em;
+    }
+    #gifview { display: none; max-width: 90%;}
+    #download { margin-top: 1em; display: none; }
+  </style>
+</head>
+<body>
+<div class="main">
+  <div id="drop-area" ondrop="dropHandler(event);" ondragover="dragOverHandler(event);" ondragenter="dragEnterHandler(event);" ondragleave="dragLeaveHandler(event);">
+    <h2>MP4をGIFに変換</h2>
+    <div id="form-area">
+      <input type="file" id="fileInput" accept="video/mp4">
+      <span>
+        <label for="width-select">GIF画像の幅(高さは自動計算):</label>
+        <select id="width-select">
+          <option value="1280">1280px</option>
+          <option value="640">640px</option>
+          <option value="320" selected>320px</option>
+          <option value="160">160px</option>
+        </select>
+      </span>
+      <span>
+        <label for="video-fps-select">動画のサンプルフレームレート:</label>
+        <select id="video-fps-select">
+          <option value="10">10fps</option>
+          <option value="5" selected>5fps</option>
+          <option value="2">2fps</option>
+          <option value="1">1fps</option>
+          <option value="0.5">0.5fps</option>
+          <option value="0.2">0.2fps</option>
+          <option value="0.1">0.1fps</option>
+        </select>
+      </span>
+      <span>
+        <label for="gif-fps-select">GIFの再生フレームレート:</label>
+        <select id="gif-fps-select">
+          <option value="10">10fps</option>
+          <option value="5" selected>5fps</option>
+          <option value="2">2fps</option>
+          <option value="1">1fps</option>
+        </select>
+      </span>
+    </div>
+    <div id="status">動画をドラッグ&amp;ドロップするか、ファイル選択してください。</div><br>
+    <video id="video" muted playsinline></video>
+    <canvas id="canvas" width="320" height="240"></canvas>
+    <img id="gifview" /><br>
+    <a id="download" download="output.gif">GIFをダウンロード</a>
+  </div>
+</div>
+
+<script>
+const dropArea = document.getElementById('drop-area');
+const fileInput = document.getElementById('fileInput');
+const widthSelect = document.getElementById('width-select');
+const videoFpsSelect = document.getElementById('video-fps-select');
+const gifFpsSelect = document.getElementById('gif-fps-select');
+const video = document.getElementById('video');
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const status = document.getElementById('status');
+const downloadLink = document.getElementById('download');
+const gifView = document.getElementById('gifview');
+
+let gif;
+let selectedWidth = getSelectedValue(widthSelect);
+let selectedVideoFps = getSelectedValue(videoFpsSelect);
+let selectedGifFps = getSelectedValue(gifFpsSelect);
+let dragCounter = 0;
+
+function getSelectedValue(selectElement) {
+  const selectedOption = selectElement.selectedOptions[0];
+  return Number(selectedOption.value);
+}
+
+function dropHandler(ev) {
+  ev.preventDefault();  // 既定の動作で防ぐ（ファイルが開かれないようにする）
+  dragCounter = 0;
+  dropArea.classList.remove('dragover');
+
+  if (ev.dataTransfer.items) {
+    // DataTransferItemList インターフェイスを使用して、ファイルにアクセスする
+    for(const item of ev.dataTransfer.items) {
+      if (item.kind === "file" && item.type == 'video/mp4') {
+        const file = item.getAsFile();
+        setupFile(file);
+        break;
+      }
+    }
+  } else {
+    // DataTransfer インターフェイスを使用してファイルにアクセスする
+    for(const file of ev.dataTransfer.files) {
+      if (file.type == 'video/mp4') {
+        setupFile(file);
+        break;
+      }
+    }
+  }
+}
+
+function dragEnterHandler(ev) {
+  ev.preventDefault();  // 既定の動作で防ぐ（ファイルが開かれないようにする）
+  if (ev.dataTransfer.items) {
+    // DataTransferItemList インターフェイスを使用して、ファイルにアクセスする
+    for(const item of ev.dataTransfer.items) {
+      if (item.kind === "file" && item.type == 'video/mp4') {
+        if (dragCounter == 0) {
+          dropArea.classList.add('dragover');
+        }
+        dragCounter++;
+        break;
+      }
+    }
+  } else {
+    // DataTransfer インターフェイスを使用してファイルにアクセスする
+    for(const file of ev.dataTransfer.files) {
+      if (file.type == 'video/mp4') {
+        if (dragCounter == 0) {
+          dropArea.classList.add('dragover');
+        }
+        dragCounter++;
+        break;
+      }
+    }
+  }
+}
+
+function dragOverHandler(ev) {
+  ev.preventDefault();  // 既定の動作で防ぐ（ファイルが開かれないようにする）
+}
+
+function dragLeaveHandler(ev) {
+  if (dragCounter > 0) {
+      dragCounter--;
+      if (dragCounter == 0) {
+        dropArea.classList.remove('dragover');
+      }
+  }
+}
+
+fileInput.addEventListener('change', async () => {
+  const file = fileInput.files[0];
+  if (file) {
+    setupFile(file);
+  }
+});
+
+function setupFile(file) {
+  status.textContent = '動画を読み込み中...';
+  selectedWidth = getSelectedValue(widthSelect);
+  selectedVideoFps = getSelectedValue(videoFpsSelect);
+  selectedGifFps = getSelectedValue(gifFpsSelect);
+
+  const url = URL.createObjectURL(file);
+  video.src = url;
+
+  // 再生準備ができたら処理開始
+  video.onloadedmetadata = () => {
+    downloadLink.style.display = 'none';
+    downloadLink.href = '';
+    gifView.style.display = 'none';
+    gifView.src = '';
+    canvas.width = selectedWidth;
+    canvas.height = Math.floor(selectedWidth * video.videoHeight / video.videoWidth);
+    startCapture();
+  };
+}
+
+function startCapture() {
+  gif = new GIF({
+    workers: 2,
+    quality: 10,
+    width: canvas.width,
+    height: canvas.height,
+    workerScript: './gif.js.optimized/dist/gif.worker.js'
+  });
+
+  status.textContent = '動画を処理中...';
+
+  let frameCount = 0;
+
+  video.currentTime = 0;
+  video.play();
+
+  const captureInterval = 1000 / selectedVideoFps;
+  const gifInterval = 1000 / selectedGifFps;
+
+  const intervalId = setInterval(() => {
+    if (video.ended) {
+      clearInterval(intervalId);
+      video.pause();
+      status.textContent = 'GIFを生成中...';
+      gif.render();
+      return;
+    }
+
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    gif.addFrame(ctx, { copy: true, delay: gifInterval });
+    frameCount++;
+  }, captureInterval);
+
+  gif.on('finished', (blob) => {
+    const gifUrl = URL.createObjectURL(blob);
+    downloadLink.href = gifUrl;
+    downloadLink.style.display = 'inline-block';
+    gifView.src = gifUrl;
+    gifView.style.display = 'inline-block';
+    status.textContent = 'GIFが完成しました。';
+  });
+
+  gif.on('progress', (p) => {
+    status.textContent = `GIF生成中... ${(p * 100).toFixed(1)}%`;
+  });
+}
+</script>
+
+</body>
+</html>
