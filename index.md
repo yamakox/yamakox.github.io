@@ -13,4 +13,4 @@
 
 ### Python
 
-- [python-inquirer](./memo/inquirer.md)
+- [python-inquirer](./memo/inquirer.md) - コマンドラインでリストやチェックボックスなどを使えるようにする

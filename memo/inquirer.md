@@ -1,5 +1,9 @@
 # python-inquirer - コマンドラインでリストやチェックボックスなどを使えるようにする
 
+CLIで対話形式のアプリケーションを作成するときに便利。
+
+![スクリーンショット](./inquirer.png)
+
 - GitHub: [python-inquirer](https://github.com/magmax/python-inquirer)
 - [Documentation](https://python-inquirer.readthedocs.io)
 
@@ -36,7 +40,7 @@ if __name__ == "__main__":
     main()
 ```
 
-## サンプルプロジェクトの作成
+## サンプルプロジェクトの作成 (poetry)
 
 ```bash
 cd <開発ディレクトリ>
