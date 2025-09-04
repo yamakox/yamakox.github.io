@@ -5,7 +5,7 @@
 
 ## GitHubで公開しているソフト
 
-- [fffio (FFmpeg Frame Input/Output) - Easily reading and writing video files](https://github.com/yamakox/ffio)
+- [fffio (FFmpeg Frame Input/Output) - Easily reading and writing video files](https://github.com/yamakox/fffio)
 - [tsutil - TrainScanner用の動画データを事前処理するためのツール。](https://github.com/yamakox/tsutil)
 - [svg2ico - Converter from SVG file to Windows .ico file](https://github.com/yamakox/svg2ico)
 
