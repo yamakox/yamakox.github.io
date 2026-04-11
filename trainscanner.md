@@ -74,4 +74,12 @@ pip3 install git+https://github.com/yamakox/TrainScanner.git@image-catalog-file-
 ls -d 連続画像データ/*.png > Catalog.txt
 ```
 
+120fpsのように隣り合うフレーム同士の移動距離が少ないデータの場合、フレームを間引いたカタログファイルを作るとよいです。
+
+例えば、奇数行のフレームだけを抽出するのであれば、以下のコマンドのようにします。
+
+```bash
+sed "n; d" Catalog.txt > OddLines.txt
+```
+
 出来上がったカタログファイルは改造版TrainScannerの「ムービーを開く」画面から選択することができます。
