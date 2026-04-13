@@ -79,11 +79,11 @@ ls -d 連続画像データ/*.png > Catalog.txt
 例えば、3行ごとにフレームを抽出するのであれば、以下のようなコマンドを使います。
 
 ```bash
-awk "NR%3==0" Catalog.txt > OddLines.txt
+awk "NR%3==0" Catalog.txt > ReducedCatalog.txt
 ```
 
-TrainScanner 0.13.2では[`cv2.matchTemplate(cv2.CCOEFF_NORMED)`](https://pystyle.info/opencv-template-matching/)を使って検知窓内の画像が次のフレームのどの位置にいるかを探すため、
-新幹線のように先頭部分が尖っていると、検知窓内に写り込んでいる背景に邪魔されて、先頭部分の移動距離がうまく検出できないことがあります。
+TrainScanner 0.13.2では`cv2.matchTemplate(cv2.CCOEFF_NORMED)`[(参考)](https://pystyle.info/opencv-template-matching/)を使って検知枠内の画像が次のフレームのどの位置にいるかを探すため、
+新幹線のように先頭部分が尖っていると検知枠内に写り込んでいる背景の部分が広くなり、先頭部分の移動距離がうまく検出できないことがあります。
 その場合は、先頭部分だけのカタログファイルを作ってフレームの順序を逆転し、車両の中心側から先頭部分に向かって結合すると、うまくつながる場合があります。
 
 ```bash
