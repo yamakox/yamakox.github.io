@@ -37,12 +37,10 @@
 
 ![カタログファイル](./catalog.png)
 
+改造版TrainScannerのインストール方法です。ターミナルから以下のコマンドを実行してください。Pythonは[**uv**](https://docs.astral.sh/uv/)でインストールできます。
+
 ```bash
-# 改造版TrainScannerのインストール方法。ターミナルからコマンド入力してください。
-# PythonはHomebrewでインストールできます。(brew install python)
-python3 -m venv venv
-source venv/bin/activate
-pip3 install git+https://github.com/yamakox/TrainScanner.git@image-catalog-file-0.13.2
+uv pip install git+https://github.com/yamakox/TrainScanner.git@image-catalog-file-0.13.2
 ```
 
 カタログファイルには、連続した画像ファイルのパス名(画像ファイルの格納場所)を1行ずつ順番に記しておきます。
